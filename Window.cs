@@ -21,10 +21,43 @@ internal sealed class ClipWindow : Form
     [DllImport("user32.dll")] private static extern bool RegisterHotKey(IntPtr hwnd, int id, uint mods, uint key);
     [DllImport("user32.dll")] private static extern bool UnregisterHotKey(IntPtr hwnd, int id);
     [DllImport("user32.dll")] private static extern bool SetForegroundWindow(IntPtr hwnd);
+    [DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] private static extern IntPtr GetAncestor(IntPtr hwnd, uint flag);
+    [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint processId);
+    private readonly System.Windows.Forms.Timer focusCheck = new System.Windows.Forms.Timer { Interval = 150 };
+    private uint browserProcessId;
+
+    private void CheckForeground(object sender, EventArgs args)
+    {
+        if (quitting || !Visible || WindowState == FormWindowState.Minimized) {
+            focusCheck.Stop();
+            return;
+        }
+        IntPtr foreground = GetForegroundWindow();
+        if (foreground == IntPtr.Zero) return;
+        uint foregroundProcess, hostProcess;
+        GetWindowThreadProcessId(foreground, out foregroundProcess);
+        GetWindowThreadProcessId(Handle, out hostProcess);
+        // WebView2 popups and native file pickers may have their own top-level HWND.
+        if (GetAncestor(foreground, 3) == GetAncestor(Handle, 3) ||
+            foregroundProcess == hostProcess || foregroundProcess == browserProcessId) return;
+        focusCheck.Stop();
+        Hide();
+    }
+
     private const int ShortcutId = 1;
     private readonly NotifyIcon tray = new NotifyIcon();
     private bool registered, quitting;
     private string shortcut;
+    private bool editorReady, settingsRequested;
+
+    private void ShowSettings()
+    {
+        Reveal();
+        if (editorReady) view.CoreWebView2.PostWebMessageAsString("open-settings");
+        else settingsRequested = true;
+    }
+
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
     private static extern int SetCurrentProcessExplicitAppUserModelID(string id);
     private static readonly bool Chinese = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "zh";
@@ -81,8 +114,12 @@ internal sealed class ClipWindow : Form
     private ClipWindow()
     {
         Text = Chinese ? "AI 剪贴板" : "AI Clipboard";
+        focusCheck.Tick += CheckForeground;
+        Activated += (s,e) => focusCheck.Start();
+        VisibleChanged += (s,e) => { if (!Visible) focusCheck.Stop(); };
         var menu = new ContextMenuStrip();
         menu.Items.Add(Chinese ? "打开 AI 剪贴板" : "Show AI Clipboard", null, (s,e) => Reveal());
+        menu.Items.Add(Chinese ? "设置" : "Settings", null, (s,e) => ShowSettings());
         menu.Items.Add(Chinese ? "退出" : "Quit", null, (s,e) => Quit());
         tray.ContextMenuStrip = menu;
         var iconStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("feather.ico");
@@ -92,7 +129,7 @@ internal sealed class ClipWindow : Form
         tray.Text = Text;
         tray.MouseClick += (s,e) => { if (e.Button == MouseButtons.Left) Reveal(); };
         tray.Visible = true;
-        FormClosed += (s,e) => { tray.Visible = false; tray.Dispose(); menu.Dispose(); smallIcon.Dispose(); iconStream.Dispose(); };
+        FormClosed += (s,e) => { focusCheck.Dispose(); tray.Visible = false; tray.Dispose(); menu.Dispose(); smallIcon.Dispose(); iconStream.Dispose(); };
         FormBorderStyle = FormBorderStyle.None;
         StartPosition = FormStartPosition.CenterScreen;
         Size = new Size(680, 450);
@@ -108,6 +145,7 @@ internal sealed class ClipWindow : Form
                 var env = await CoreWebView2Environment.CreateAsync(null, cache);
                 await view.EnsureCoreWebView2Async(env);
                 var core = view.CoreWebView2;
+                browserProcessId = core.BrowserProcessId;
                 const string page = "https://minimd.local/editor.html";
                 core.SetVirtualHostNameToFolderMapping("minimd.local", AppDomain.CurrentDomain.BaseDirectory, CoreWebView2HostResourceAccessKind.Deny);
                 core.NavigationStarting += (s,e) => { if (e.Uri != page) e.Cancel = true; };
@@ -121,7 +159,14 @@ internal sealed class ClipWindow : Form
                     string action = e.TryGetWebMessageAsString();
                     if (action == "quit") Quit();
                     else if (action == "hide") Hide();
-                    else if (action == "hotkey-status") core.PostWebMessageAsString(registered ? shortcut : "shortcut-unavailable");
+                    else if (action == "hotkey-status") {
+                        editorReady = true;
+                        core.PostWebMessageAsString(registered ? shortcut : "shortcut-unavailable");
+                        if (settingsRequested) {
+                            settingsRequested = false;
+                            core.PostWebMessageAsString("open-settings");
+                        }
+                    }
                     else if (action == "minimize") WindowState = FormWindowState.Minimized;
                     else if (action == "drag" || action == "resize") {
                         ReleaseCapture();

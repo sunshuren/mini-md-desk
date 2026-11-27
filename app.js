@@ -72,11 +72,19 @@ document.addEventListener('keydown', e => {
 });
 
 
+const settings = document.querySelector('#settings');
+function openSettings() {
+  document.querySelector('#actions').hidePopover();
+  if (!settings.open) settings.showModal();
+}
+document.querySelector('#browser-settings').onclick = openSettings;
 const desktop = window.chrome?.webview;
 if (desktop) {
   document.body.classList.add('desktop');
+  document.querySelector('#browser-settings').remove();
   desktop.addEventListener('message', event => {
-    if (['Ctrl + Alt + Space', 'Ctrl + Alt + M'].includes(event.data)) document.querySelector('#hotkey').textContent = event.data;
+    if (event.data === 'open-settings') openSettings();
+    else if (['Ctrl + Alt + Space', 'Ctrl + Alt + M'].includes(event.data)) document.querySelector('#hotkey').textContent = event.data;
     else if (event.data === 'shortcut-unavailable') document.querySelector('#hotkey').textContent = tr('Shortcut in use. Open from the tray instead.');
   });
   desktop.postMessage('hotkey-status');

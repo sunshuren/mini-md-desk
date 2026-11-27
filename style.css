@@ -34,8 +34,10 @@ blockquote { color: var(--muted); margin-left: 1.2em; }
 .desktop #resize { display: block; position: fixed; bottom: 0; right: 0; width: 14px; height: 14px; cursor: nwse-resize; }
 
 
-#appearance { padding: 5px 8px; font-size: 13px; }
-#appearance summary { cursor: pointer; }
+#settings { background: var(--paper); color: var(--ink); border: 0; padding: 20px 24px; }
+#settings h2 { font-size: 16px; margin: 0 0 10px; }
+#settings form { text-align: right; margin-top: 12px; }
+#settings::backdrop { background: rgb(0 0 0 / 12%); }
 .color-row { display: flex; align-items: center; gap: 8px; padding-top: 6px; }
 #background { width: 26px; height: 24px; padding: 0; border: 0; background: transparent; cursor: pointer; }
 
