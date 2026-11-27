@@ -1,23 +1,26 @@
-# 极简 MD
+# 极简 MD 剪贴板
 
-把 AI 回复粘进来，直接点段落或表格单元格改字，再复制或保存为 Markdown。可离线使用，草稿保存在当前设备。
+把 AI 回复粘成独立条目，在左侧切换历史，点右侧的段落或表格直接改字。记录只保存在本机。Windows 版使用无边框窗口，拖动顶部空白处可以移动窗口，拖动右下角可以调整大小。
 
-## 下载和使用
+## 使用
 
 从 [GitHub Releases](https://github.com/sunshuren/mini-md-desk/releases/latest) 下载：
 
-- **Windows**：双击 `MiniMD.exe`，使用本机 Microsoft Edge 打开独立窗口。需要 Edge 和 .NET Framework 4.5 或更高版本。
-- **其他桌面系统**：下载 `MiniMD.html`，用现代浏览器打开。HTML 文件已包含编辑器及解析器。
+- **Windows x64**：双击 `MiniMD.exe`，需要 Microsoft Edge WebView2 Runtime 和 .NET Framework 4.6.2 或更高版本。
+- **其他桌面系统**：下载 `MiniMD.html`，用现代浏览器打开。浏览器窗口保留其自身标题栏。
 
-点「粘贴新稿」导入剪贴板，或点「打开」读取 UTF-8 Markdown 文件。点击文字开始编辑，点外面恢复排版。表格里按 Tab / Shift+Tab 切换单元格。段落内可直接修改 Markdown 标记。
+点「粘贴新条目」或在正文编辑框以外按 Ctrl+V，将剪贴板文字添加到历史。编辑框内粘贴会插入当前段落或单元格。点「打开」也可以导入 UTF-8 文本。点击左侧标题切换条目，点「删除」可移除当前记录。
 
-点「复制全文」取回 Markdown。点「保存 .md」或按 Ctrl+S（macOS 为 Cmd+S）导出。草稿缓存仅保留最近一篇，正式留档请保存为文件。复制粘贴按钮需要浏览器的剪贴板权限。也可点击正文后使用系统粘贴快捷键。
+点文字开始编辑，点击外面恢复排版；表格中按 Tab 或 Shift+Tab 切换单元格。点「复制全文」取回当前 Markdown，或按 Ctrl+S（macOS 为 Cmd+S）保存文件。关闭再打开应用会恢复条目。正式留档请导出 .md。
 
-## 从源码运行
+### 从 1.0 升级
 
-直接打开 `index.html` 即可使用。运行 `python build.py` 可在 `dist/` 生成单文件 HTML。Windows 上同一命令还会用系统 .NET Framework C# 编译器构建 EXE。构建无需联网。
+Windows 1.1 使用独立的 WebView2 本机存储。要带入旧草稿，请在 1.0 窗口导出 .md，再用新版的「打开」导入。旧窗口已关闭时，可以重新运行 1.0。HTML 版在同一浏览器和文件位置升级时会导入已有草稿。
+
+## 构建
+
+直接打开 `index.html` 即可使用浏览器版。运行 `python build.py` 在 `dist/` 生成离线 HTML。Windows 上还会用系统 .NET Framework C# 编译器生成自解包 EXE。首次构建桌面版会从 NuGet 下载固定版本的 WebView2 SDK 并校验 SHA-256。应用启动和编辑无需联网。
 
 ## 许可
 
-应用代码采用 MIT 许可证。Markdown 解析使用 markdown-it，第三方许可随附于 `vendor/`，并嵌入发行文件。
-
+应用代码采用 MIT 许可证。Markdown 解析使用 markdown-it，第三方许可随附于 `vendor/` 并嵌入 HTML。Windows 包同时携带 WebView2 SDK 的许可文件。

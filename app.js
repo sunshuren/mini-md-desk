@@ -3,16 +3,9 @@ const md = window.markdownit({ html: false, breaks: true });
 md.renderer.rules.image = (tokens, i) => '[图片：' + md.utils.escapeHtml(tokens[i].content) + ']';
 const page = document.querySelector('main');
 const status = document.querySelector('#status');
-const storageKey = 'mini-md-desk.document.v1';
 let source = '', filename = '未命名草稿', newline = '\n', dirty = false;
 let fields = [], active = null;
 
-function persist() {
-  try {
-    localStorage.setItem(storageKey, JSON.stringify({ source, filename, dirty }));
-    status.textContent = '草稿已保存在本机';
-  } catch { status.textContent = '草稿缓存不可用，请保存 .md'; }
-}
 function remember() { dirty = true; persist(); }
 function showDocument(text, name) {
   source = text;
@@ -22,27 +15,14 @@ function showDocument(text, name) {
   document.title = filename + ' · 极简 MD';
   draw();
 }
-function replaceDocument(text, name, changed) {
-  if (dirty && source && !confirm('当前草稿尚未导出。要替换为新文稿吗？')) return;
-  dirty = changed;
-  showDocument(text, name);
-  persist();
-}
-try {
-  const cached = JSON.parse(localStorage.getItem(storageKey));
-  if (cached && typeof cached.source === 'string' && typeof cached.filename === 'string') {
-    dirty = !!cached.dirty;
-    showDocument(cached.source, cached.filename);
-    status.textContent = '已恢复本机草稿';
-  } else showDocument('', filename);
-} catch { showDocument('', filename); }
+restoreHistory();
 
 document.querySelector('#paste').onclick = async () => {
   try {
     const text = await navigator.clipboard.readText();
     if (text) replaceDocument(text, '未命名草稿', true);
     else status.textContent = '剪贴板中没有文字';
-  } catch { status.textContent = '请点击正文后按 Ctrl+V 粘贴'; }
+  } catch { status.textContent = '点击左侧记录区，再按 Ctrl+V 新建条目'; }
 };
 document.addEventListener('paste', event => {
   if (event.target.tagName === 'TEXTAREA') return;
@@ -63,6 +43,7 @@ document.querySelector('#copy').onclick = async () => {
 };
 async function save() {
   const text = source;
+  const savedId = selected;
   const name = /\.(md|markdown)$/i.test(filename) ? filename : filename + '.md';
   try {
     if (window.showSaveFilePicker) {
@@ -70,6 +51,7 @@ async function save() {
       const writer = await handle.createWritable();
       await writer.write(text);
       await writer.close();
+      if (selected !== savedId) return;
       filename = handle.name;
       document.querySelector('#filename').textContent = filename;
       document.title = filename + ' · 极简 MD';
@@ -89,3 +71,17 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); save(); }
 });
 
+
+const desktop = window.chrome?.webview;
+if (desktop) {
+  document.body.classList.add('desktop');
+  for (const action of ['minimize', 'close']) {
+    document.getElementById(action).onclick = () => desktop.postMessage(action);
+  }
+  document.querySelector('header').addEventListener('pointerdown', e => {
+    if (e.button === 0 && !e.target.closest('button')) desktop.postMessage('drag');
+  });
+  document.querySelector('#resize').onpointerdown = e => {
+    if (e.button === 0) desktop.postMessage('resize');
+  };
+}
