@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<title>极简 MD</title><link rel="stylesheet" href="style.css"></head>
+<body><header><div class="brand"><b aria-hidden="true">M↓</b> 极简 MD</div><nav aria-label="文稿操作">
+<button id="paste">粘贴新稿</button><button id="open">打开</button><button id="copy">复制全文</button><button id="save">保存 .md</button></nav></header>
+<section><div class="meta"><span id="filename">未命名草稿</span><span id="status" role="status"></span></div>
+<main aria-label="文稿"></main></section><input type="file" accept=".md,.markdown,.txt,text/plain" hidden>
+<script src="vendor/markdown-it.min.js"></script><script src="editor.js"></script><script src="app.js"></script></body></html>
