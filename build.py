@@ -12,7 +12,7 @@ favicon = b64encode((root / 'assets/feather.svg').read_bytes()).decode('ascii')
 html = html.replace('href="assets/feather.svg"', 'href="data:image/svg+xml;base64,' + favicon + '"')
 css = (root / 'style.css').read_text('utf-8')
 html = html.replace('<link rel="stylesheet" href="style.css">', '<style>' + css + '</style>')
-for name in ['vendor/markdown-it.min.js', 'vendor/turndown.min.js', 'vendor/turndown-gfm.min.js', 'locale.js', 'editor.js', 'history.js', 'appearance.js', 'app.js']:
+for name in ['vendor/markdown-it.min.js', 'vendor/turndown.min.js', 'vendor/turndown-gfm.min.js', 'locale.js', 'images.js', 'editor.js', 'history.js', 'appearance.js', 'app.js']:
     script = (root / name).read_text('utf-8-sig')
     html = html.replace(f'<script src="{name}"></script>', '<script>' + script.replace('</script', '<\\/script') + '</script>')
 licenses = [root / 'LICENSE', *sorted((root / 'vendor').glob('*-LICENSE.txt'))]

@@ -4,9 +4,37 @@ const legacyKey = 'mini-md-desk.document.v1';
 const historyList = document.querySelector('#history');
 const entries = new Map();
 let selected = null;
+let pictureDB;
+const pictureIds = new Set();
+function pictureStore(mode) {
+  return pictureDB.transaction('clips', mode).objectStore('clips');
+}
+function openPictureHistory() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('ai-clipboard-pictures', 1);
+    request.onupgradeneeded = () => request.result.createObjectStore('clips', {keyPath: 'id'});
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      pictureDB = request.result;
+      const load = pictureStore('readonly').getAll();
+      load.onsuccess = () => {
+        for (const entry of load.result) {
+          pictureIds.add(entry.id);
+          entries.set(entry.id, entry);
+        }
+        resolve();
+      };
+      load.onerror = () => reject(load.error);
+    };
+  });
+}
 
 function label(entry) {
   if (![tr("Untitled clip"), "Untitled clip", "未命名草稿"].includes(entry.filename)) return entry.filename;
+  if (entry.source.trimStart().startsWith('![')) {
+    const alt = /^!\[([^\]]*)\]/.exec(entry.source.trimStart());
+    if (alt) return alt[1] || tr('Image');
+  }
   return entry.source.trimStart().split(/[\r\n]/, 1)[0].replace(/^#{1,6}\s+/, '').slice(0, 64) || tr("Empty clip");
 }
 
@@ -43,7 +71,14 @@ function persist() {
   Object.assign(entry, { source, filename, dirty });
   drawHistory();
   try {
-    localStorage.setItem(entryPrefix + selected, JSON.stringify(entry));
+    if (pictureDB && (pictureIds.has(entry.id) || entry.source.includes('data:image/'))) {
+      const transaction = pictureStore('readwrite').put(entry).transaction;
+      pictureIds.add(entry.id);
+      transaction.oncomplete = () => { try { localStorage.removeItem(entryPrefix + entry.id); } catch {} };
+      transaction.onabort = () => { if (selected === entry.id) status.textContent = tr("Local storage unavailable. Save a .md copy."); };
+    } else {
+      localStorage.setItem(entryPrefix + selected, JSON.stringify(entry));
+    }
     localStorage.setItem(selectedKey, selected);
     status.textContent = tr("Saved on this device");
     return true;
@@ -60,13 +95,14 @@ function replaceDocument(text, name, changed) {
   persist();
 }
 
-function restoreHistory() {
+async function restoreHistory() {
+  try { await openPictureHistory(); } catch {}
   try {
     for (const key of Object.keys(localStorage)) {
       if (!key.startsWith(entryPrefix)) continue;
       try {
         const entry = JSON.parse(localStorage.getItem(key));
-        if (entry && key === entryPrefix + entry.id && typeof entry.source === 'string' && typeof entry.filename === 'string') entries.set(entry.id, entry);
+        if (entry && !pictureIds.has(entry.id) && key === entryPrefix + entry.id && typeof entry.source === 'string' && typeof entry.filename === 'string') entries.set(entry.id, entry);
       } catch {}
     }
     const legacy = JSON.parse(localStorage.getItem(legacyKey));
@@ -81,11 +117,23 @@ function restoreHistory() {
   } catch { select(null); }
 }
 
-document.querySelector('#delete').onclick = () => {
+document.querySelector('#delete').onclick = async () => {
   if (!selected || !confirm(tr("Delete this local clip?"))) return;
-  try { localStorage.removeItem(entryPrefix + selected); }
+  const id = selected;
+  try {
+    if (pictureIds.has(id)) {
+      await new Promise((resolve,reject) => {
+        const tx = pictureStore('readwrite').delete(id).transaction;
+        tx.oncomplete = resolve;
+        tx.onabort = () => reject(tx.error);
+      });
+      pictureIds.delete(id);
+    }
+    localStorage.removeItem(entryPrefix + id);
+  }
   catch { status.textContent = tr("Could not delete this clip. Try again."); return; }
-  entries.delete(selected);
+  entries.delete(id);
+  if (selected !== id) { drawHistory(); return; }
   const latest = Array.from(entries.values()).sort((a,b) => b.created - a.created)[0];
   select(latest ? latest.id : null);
 };

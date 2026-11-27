@@ -152,7 +152,18 @@ internal sealed class ClipWindow : Form
                 core.WebMessageReceived += (s,e) => {
                     if (e.Source != page) return;
                     string action = e.TryGetWebMessageAsString();
-                    if (action == "quit") Quit();
+                    if (action.StartsWith("copy-png:data:image/png;base64,", StringComparison.Ordinal)) {
+                        try {
+                            byte[] bytes = Convert.FromBase64String(action.Substring(action.IndexOf(',') + 1));
+                            using (var input = new MemoryStream(bytes))
+                            using (var image = Image.FromStream(input))
+                            using (var bitmap = new Bitmap(image)) {
+                                var data = new DataObject();
+                                data.SetImage(bitmap);
+                                Clipboard.SetDataObject(data, true, 8, 70);
+                            }
+                        } catch { core.PostWebMessageAsString("image-copy-error"); }
+                    } else if (action == "quit") Quit();
                     else if (action == "hide") Hide();
                     else if (action == "hotkey-status") {
                         editorReady = true;

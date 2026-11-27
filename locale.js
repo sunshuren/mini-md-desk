@@ -1,5 +1,9 @@
 const chineseUI = navigator.language.toLowerCase().startsWith('zh');
 const chineseText = {
+  "Copy image": "复制图片",
+  "Image": "图片",
+  "Could not copy this image.": "复制图片失败，请重试。",
+  "Could not read this image.": "读取图片失败，请重试。",
   "History and actions": "历史和操作",
   "Clip actions": "文稿操作",
   "Paste new clip": "粘贴新条目",

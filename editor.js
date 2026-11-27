@@ -38,17 +38,25 @@ function field(el, start, end, kind) {
   el.addEventListener('input', () => {
     updateField(item, writer.turndown(el.innerHTML));
   });
-  el.addEventListener('paste', event => {
+  el.addEventListener('paste', async event => {
     event.preventDefault();
     event.stopPropagation();
-    const text = event.clipboardData.getData('text/plain');
+    const images = clipImages.fromEvent(event);
+    let text = event.clipboardData.getData('text/plain');
+    if (images) {
+      const range = getSelection().rangeCount ? getSelection().getRangeAt(0).cloneRange() : null;
+      try { text = await images; }
+      catch { reportImageError(tr('Could not read this image.')); return; }
+      if (!el.isConnected || document.activeElement !== el) return;
+      if (range) { getSelection().removeAllRanges(); getSelection().addRange(range); }
+    }
     if (!text) return;
-    if (!el.textContent.trim() && !el.querySelector('hr, pre, ul, ol, blockquote')) {
+    if (!el.textContent.trim() && !el.querySelector('img, hr, pre, ul, ol, blockquote')) {
       updateField(item, text);
       draw();
       return;
     }
-    if (getSelection().anchorNode?.parentElement?.closest('pre, code')) {
+    if (!images && getSelection().anchorNode?.parentElement?.closest('pre, code')) {
       document.execCommand('insertText', false, text);
       return;
     }

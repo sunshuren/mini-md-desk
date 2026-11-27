@@ -56,3 +56,6 @@ blockquote { color: var(--muted); margin-left: 1.2em; }
 
 #hotkey { display: block; width: 100%; padding: 2px 8px; color: var(--muted); font-size: 12px; }
 
+
+.clip-image { display: inline-block; max-width: 100%; max-height: 65vh; height: auto; object-fit: contain; vertical-align: middle; cursor: pointer; }
+.image-action { position: fixed; inset: auto; margin: 0; border: 0; border-radius: 4px; padding: 6px 12px; background: var(--menu, var(--vscode-menu-background, #efefeb)); color: var(--ink, var(--vscode-menu-foreground, #222)); cursor: pointer; }

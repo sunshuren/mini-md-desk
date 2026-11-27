@@ -34,6 +34,10 @@ Press **Ctrl+Shift+C** to copy the full Markdown and **Ctrl+S** to export it (us
 
 Windows releases from v1.1 onward share clip history and appearance settings. For v1.0, export your draft as Markdown first. If upgrading the standalone HTML edition, keeping its previous filename and location helps preserve browser storage.
 
+## Images
+
+Paste a screenshot or copied PNG, JPEG, GIF, or WebP into a clip. Text and embedded images copied together from HTML keep their reading order. Click or right-click an embedded image and choose **Copy image** to put the picture on the clipboard as PNG. Markdown exports include the image data, so moving the file also moves its pictures. External image links remain links.
+
 ## Build
 
 Open `index.html` directly for the browser edition, or run `python build.py` to produce the self-contained HTML in `dist/`. On Windows the same command builds the x64 executable with the system .NET Framework compiler. The first Windows build downloads a pinned WebView2 SDK package from NuGet and verifies its SHA-256 checksum.

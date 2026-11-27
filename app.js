@@ -10,6 +10,7 @@ md.renderer.rules.image = (tokens, index) => {
   return '<span contenteditable="false" data-image-markdown="' + escape(markdown) + '">' +
     escape(tr("[Image: ") + alt + ']') + '</span>';
 };
+clipImages.configure(md);
 const page = document.querySelector('main');
 const status = document.querySelector('#status');
 let source = '', filename = tr("Untitled clip"), newline = '\n', dirty = false;
@@ -24,25 +25,33 @@ function showDocument(text, name) {
   document.title = filename + tr(" · AI Clipboard");
   draw();
 }
-restoreHistory();
+const historyReady = restoreHistory();
 
 document.querySelector('#paste').onclick = async () => {
   try {
-    const text = await navigator.clipboard.readText();
+    const text = await clipImages.read();
+    await historyReady;
     if (text) replaceDocument(text, tr("Untitled clip"), true);
     else status.textContent = tr("The clipboard contains no text.");
   } catch { status.textContent = tr("Click outside the text and paste to create a clip."); }
 };
-document.addEventListener('paste', event => {
+document.addEventListener('paste', async event => {
   if (event.defaultPrevented || event.target.isContentEditable) return;
+  const images = clipImages.fromEvent(event);
+  if (images) {
+    event.preventDefault();
+    try { await historyReady; replaceDocument(await images, tr("Untitled clip"), true); }
+    catch { reportImageError(tr('Could not read this image.')); }
+    return;
+  }
   const text = event.clipboardData.getData('text/plain');
-  if (text) { event.preventDefault(); replaceDocument(text, tr("Untitled clip"), true); }
+  if (text) { event.preventDefault(); await historyReady; replaceDocument(text, tr("Untitled clip"), true); }
 });
 const picker = document.querySelector('input[type=file]');
 document.querySelector('#open').onclick = () => picker.click();
 picker.onchange = async () => {
   const file = picker.files[0];
-  try { if (file) replaceDocument(await file.text(), file.name, false); }
+  try { await historyReady; if (file) replaceDocument(await file.text(), file.name, false); }
   catch { status.textContent = tr("Could not read the file. Try again."); }
   finally { picker.value = ''; }
 };
@@ -88,11 +97,17 @@ function openSettings() {
 }
 document.querySelector('#browser-settings').onclick = openSettings;
 const desktop = window.chrome?.webview;
+function reportImageError(message) {
+  status.textContent = message;
+  showActions(12, 12);
+}
+clipImages.bind(page, desktop ? url => desktop.postMessage('copy-png:' + url) : null, reportImageError);
 if (desktop) {
   document.body.classList.add('desktop');
   document.querySelector('#browser-settings').remove();
   desktop.addEventListener('message', event => {
-    if (event.data === 'open-settings') openSettings();
+    if (event.data === 'image-copy-error') reportImageError(tr('Could not copy this image.'));
+    else if (event.data === 'open-settings') openSettings();
     else if (['Ctrl + Alt + Space', 'Ctrl + Alt + M'].includes(event.data)) document.querySelector('#hotkey').textContent = event.data;
     else if (event.data === 'shortcut-unavailable') document.querySelector('#hotkey').textContent = tr('Shortcut in use. Open from the tray instead.');
   });
