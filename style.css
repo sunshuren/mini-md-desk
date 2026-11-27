@@ -11,9 +11,22 @@ button { border: 0; background: transparent; color: inherit; font-size: 13px; cu
 button:hover { background: var(--hover); }
 button:disabled { opacity: .4; }
 :focus-visible { outline: 1px dotted #888; outline-offset: 2px; }
-main { max-width: 760px; margin: 0 auto; padding: 5px clamp(16px,4vw,42px) 12vh; overflow-wrap: anywhere; }
-.block { margin: .7em 0; }
-.empty { color: var(--muted); }
+main { max-width: 45rem; line-height: 1.8; margin: 0 auto; padding: 5px clamp(16px,4vw,42px) 12vh; overflow-wrap: anywhere; }
+.block { margin: .9em 0; }
+.editable:empty::before { content: attr(data-placeholder); color: var(--muted); pointer-events: none; }
+.editable:focus { outline: none; }
+main h1.block { font-size: 1.48em; }
+main h2.block { font-size: 1.24em; }
+main h3.block, main h4.block { font-size: 1.08em; }
+main :is(h1,h2,h3,h4,h5,h6).block { line-height: 1.45; font-weight: 600; margin: 1.45em 0 .45em; }
+main > :first-child { margin-top: 0 !important; }
+main :is(ul,ol) { padding-inline-start: 1.55em; }
+main li + li { margin-top: .26em; }
+main blockquote { margin-inline: .75em; padding-inline-start: .6em; }
+main pre { padding: .65em .85em; background: var(--hover); border-radius: 4px; }
+main th { font-weight: 600; }
+main td, main th { line-height: 1.65; padding-block: .45em; }
+main a { color: inherit; text-underline-offset: .18em; }
 .editable { cursor: text; min-height: 1.7em; }
 h1,h2,h3,h4,h5,h6 { line-height: 1.4; }
 p { margin: .45em 0; }

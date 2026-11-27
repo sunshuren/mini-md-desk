@@ -1,10 +1,19 @@
 'use strict';
 const md = window.markdownit({ html: false, breaks: true });
-md.renderer.rules.image = (tokens, i) => tr("[Image: ") + md.utils.escapeHtml(tokens[i].content) + ']';
+md.renderer.rules.image = (tokens, index) => {
+  const token = tokens[index];
+  const escape = md.utils.escapeHtml;
+  const alt = token.content;
+  const url = token.attrGet('src').replace(/>/g, '%3E');
+  const title = token.attrGet('title');
+  const markdown = '![' + alt + '](<' + url + '>' + (title ? ' ' + JSON.stringify(title) : '') + ')';
+  return '<span contenteditable="false" data-image-markdown="' + escape(markdown) + '">' +
+    escape(tr("[Image: ") + alt + ']') + '</span>';
+};
 const page = document.querySelector('main');
 const status = document.querySelector('#status');
 let source = '', filename = tr("Untitled clip"), newline = '\n', dirty = false;
-let fields = [], active = null;
+let fields = [];
 
 function remember() { dirty = true; persist(); }
 function showDocument(text, name) {
@@ -25,7 +34,7 @@ document.querySelector('#paste').onclick = async () => {
   } catch { status.textContent = tr("Click outside the text and paste to create a clip."); }
 };
 document.addEventListener('paste', event => {
-  if (event.target.tagName === 'TEXTAREA') return;
+  if (event.defaultPrevented || event.target.isContentEditable) return;
   const text = event.clipboardData.getData('text/plain');
   if (text) { event.preventDefault(); replaceDocument(text, tr("Untitled clip"), true); }
 });

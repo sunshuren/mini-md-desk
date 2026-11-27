@@ -26,7 +26,7 @@ Launching the executable again brings the existing window forward. If Ctrl + Alt
 
 ## Editing
 
-Pasted Markdown renders immediately, including when pasting inside the active editor. Click a rendered paragraph or table cell to edit it.
+Pasted Markdown renders immediately, including when pasting inside the active editor. Edit text directly in rendered paragraphs, lists and table cells. Bold text and links retain their appearance while typing.
 
 Paste with Ctrl+V, or choose **Right-click → Paste new clip**. Use **Open** to import a UTF-8 Markdown file. Click a clip in **History** to return to it. Inside a paragraph or cell, paste inserts text at the cursor. Tab and Shift+Tab move between table cells.
 
