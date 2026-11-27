@@ -4,7 +4,7 @@ function paint(field) {
   if (kind === 'block') el.innerHTML = md.render(value);
   else el.innerHTML = md.renderInline(kind === 'cell' ? value.replace(/\\\|/g, '|') : value);
   if (!value && kind === 'block') {
-    el.textContent = '点击这里，粘贴或输入 Markdown…';
+    el.textContent = tr("Click here to paste or write Markdown…");
     el.classList.add('empty');
   }
 }
@@ -72,7 +72,7 @@ function draw() {
 function begin(item) {
   if (active === item) return;
   const input = document.createElement('textarea');
-  input.setAttribute('aria-label', item.kind === 'cell' ? '编辑单元格' : '编辑段落');
+  input.setAttribute('aria-label', item.kind === 'cell' ? tr("Edit cell") : tr("Edit paragraph"));
   input.value = source.slice(item.start, item.end);
   item.el.classList.remove('empty');
   item.el.replaceChildren(input);

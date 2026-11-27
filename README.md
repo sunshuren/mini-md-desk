@@ -1,28 +1,39 @@
-# 极简 MD 剪贴板
+# <img src="assets/feather.svg" width="36" alt=""> AI Clipboard
 
-把 AI 回复粘成独立条目，从右上角「···」切换历史，点右侧的段落或表格直接改字。记录只保存在本机。Windows 版使用无边框窗口，窗口中只显示正文和「···」。拖动顶部空白处可以移动窗口，拖动右下角可以调整大小。
+[中文说明](README.zh-CN.md)
 
-## 使用
+A small, local-first clipboard for AI responses. Paste a Markdown reply, click a paragraph or table cell to edit it, and copy the result back. Each paste outside an editing field creates a separate clip. Clips and appearance settings stay on your device.
 
-从 [GitHub Releases](https://github.com/sunshuren/mini-md-desk/releases/latest) 下载：
+## Download
 
-- **Windows x64**：双击 `MiniMD.exe`，需要 Microsoft Edge WebView2 Runtime 和 .NET Framework 4.6.2 或更高版本。
-- **其他桌面系统**：下载 `MiniMD.html`，用现代浏览器打开。浏览器窗口保留其自身标题栏。
+Get [the latest release](https://github.com/sunshuren/mini-md-desk/releases/latest).
 
-正文默认使用暖米黄。在「··· → 外观设置 → 背景色」可自选颜色，关闭后仍会保留。Windows 应用支持逐显示器 DPI 感知。
+- **Windows x64:** Run `AI-Clipboard.exe`. The desktop app requires Microsoft Edge WebView2 Runtime and .NET Framework 4.6.2 or later.
+- **Other desktop systems:** Open `AI-Clipboard.html` in a modern browser. The single HTML file works offline. Tray controls and the global shortcut are Windows desktop features.
 
-打开右上角「···」点「粘贴新条目」或在正文编辑框以外按 Ctrl+V，将剪贴板文字添加到历史。编辑框内粘贴会插入当前段落或单元格。点「打开」也可以导入 UTF-8 文本。点击菜单中的记录标题切换条目，点「删除」可移除当前记录。
+## Windows shortcuts
 
-点文字开始编辑，点击外面恢复排版；表格中按 Tab 或 Shift+Tab 切换单元格。按 Ctrl+Shift+C 或点菜单中的「复制全文」取回当前 Markdown，或按 Ctrl+S（macOS 为 Cmd+S）保存文件。关闭再打开应用会恢复条目。正式留档请导出 .md。
+| Action | How |
+| --- | --- |
+| Show and focus the running app from another app | **Ctrl + Alt + Space**, or click the tray icon |
+| Minimize to the taskbar | **··· → Minimize** |
+| Keep running in the system tray | **··· → Hide to tray**, or **Alt + F4** |
+| Quit and release the shortcut | **··· → Quit**, or right-click the tray icon and choose **Quit** |
 
-### 从 1.0 升级
+Launching the executable again brings the existing window forward. If Ctrl + Alt + Space is taken, the app tries **Ctrl + Alt + M** and displays the active shortcut in its menu. If both are taken, the menu displays a notice and the tray icon can still open the app.
 
-Windows 1.1 使用独立的 WebView2 本机存储。要带入旧草稿，请在 1.0 窗口导出 .md，再用新版的「打开」导入。旧窗口已关闭时，可以重新运行 1.0。HTML 版在同一浏览器和文件位置升级时会导入已有草稿。
+## Editing
 
-## 构建
+Paste with Ctrl+V, or choose **··· → Paste new clip**. Use **Open** to import a UTF-8 Markdown file. Click a clip in **History** to return to it. Inside a paragraph or cell, paste inserts text at the cursor. Tab and Shift+Tab move between table cells.
 
-直接打开 `index.html` 即可使用浏览器版。运行 `python build.py` 在 `dist/` 生成离线 HTML。Windows 上还会用系统 .NET Framework C# 编译器生成自解包 EXE。首次构建桌面版会从 NuGet 下载固定版本的 WebView2 SDK 并校验 SHA-256。应用启动和编辑无需联网。
+Press **Ctrl+Shift+C** to copy the full Markdown and **Ctrl+S** to export it (use Cmd on macOS). Choose **··· → Appearance** to change the warm cream background. The interface follows the browser's preferred language, with Chinese for Chinese locales and English otherwise.
 
-## 许可
+Windows releases from v1.1 onward share clip history and appearance settings. For v1.0, export your draft as Markdown first. If upgrading the standalone HTML edition, keeping its previous filename and location helps preserve browser storage.
 
-应用代码采用 MIT 许可证。Markdown 解析使用 markdown-it，第三方许可随附于 `vendor/` 并嵌入 HTML。Windows 包同时携带 WebView2 SDK 的许可文件。
+## Build
+
+Open `index.html` directly for the browser edition, or run `python build.py` to produce the self-contained HTML in `dist/`. On Windows the same command builds the x64 executable with the system .NET Framework compiler. The first Windows build downloads a pinned WebView2 SDK package from NuGet and verifies its SHA-256 checksum.
+
+## License
+
+AI Clipboard is available under the [MIT License](LICENSE). Bundled Markdown dependencies include their licenses in `vendor/` and in the generated HTML. The Windows package includes the WebView2 SDK license.

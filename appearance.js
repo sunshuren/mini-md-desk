@@ -18,7 +18,7 @@ catch { applyBackground(cream); }
 function chooseColor(color) {
   applyBackground(color);
   try { localStorage.setItem(themeKey, color); }
-  catch { document.querySelector('#status').textContent = '颜色仅在本次打开时生效'; }
+  catch { document.querySelector('#status').textContent = tr("This color will last for this session."); }
 }
 colorPicker.addEventListener('input', () => chooseColor(colorPicker.value));
 document.querySelector('#reset-color').onclick = () => chooseColor(cream);

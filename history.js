@@ -6,8 +6,8 @@ const entries = new Map();
 let selected = null;
 
 function label(entry) {
-  if (entry.filename !== '未命名草稿') return entry.filename;
-  return entry.source.trimStart().split(/[\r\n]/, 1)[0].replace(/^#{1,6}\s+/, '').slice(0, 64) || '空白条目';
+  if (![tr("Untitled clip"), "Untitled clip", "未命名草稿"].includes(entry.filename)) return entry.filename;
+  return entry.source.trimStart().split(/[\r\n]/, 1)[0].replace(/^#{1,6}\s+/, '').slice(0, 64) || tr("Empty clip");
 }
 
 function drawHistory() {
@@ -27,7 +27,7 @@ function drawHistory() {
 function select(id) {
   selected = id;
   const entry = entries.get(id);
-  showDocument(entry ? entry.source : '', entry ? entry.filename : '未命名草稿');
+  showDocument(entry ? entry.source : '', entry ? entry.filename : tr("Untitled clip"));
   dirty = entry ? entry.dirty : false;
   try { localStorage.setItem(selectedKey, id || ''); } catch {}
   status.textContent = '';
@@ -45,10 +45,10 @@ function persist() {
   try {
     localStorage.setItem(entryPrefix + selected, JSON.stringify(entry));
     localStorage.setItem(selectedKey, selected);
-    status.textContent = '已存到本机';
+    status.textContent = tr("Saved on this device");
     return true;
   } catch {
-    status.textContent = '本机缓存不可用，请保存 .md';
+    status.textContent = tr("Local storage unavailable. Save a .md copy.");
     return false;
   }
 }
@@ -71,7 +71,7 @@ function restoreHistory() {
     }
     const legacy = JSON.parse(localStorage.getItem(legacyKey));
     if (!entries.size && legacy && typeof legacy.source === 'string' && legacy.source) {
-      showDocument(legacy.source, legacy.filename || '未命名草稿');
+      showDocument(legacy.source, legacy.filename || tr("Untitled clip"));
       dirty = !!legacy.dirty;
       if (persist()) localStorage.removeItem(legacyKey);
       return;
@@ -82,9 +82,9 @@ function restoreHistory() {
 }
 
 document.querySelector('#delete').onclick = () => {
-  if (!selected || !confirm('删除这条本机记录？')) return;
+  if (!selected || !confirm(tr("Delete this local clip?"))) return;
   try { localStorage.removeItem(entryPrefix + selected); }
-  catch { status.textContent = '删除失败，请重试'; return; }
+  catch { status.textContent = tr("Could not delete this clip. Try again."); return; }
   entries.delete(selected);
   const latest = Array.from(entries.values()).sort((a,b) => b.created - a.created)[0];
   select(latest ? latest.id : null);

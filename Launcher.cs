@@ -23,7 +23,7 @@ internal static class Launcher
                 catch (IOException) { if (!Directory.Exists(folder)) throw; Directory.Delete(temp, true); }
             }
             Process.Start(Path.Combine(folder, "ClipWindow.exe"));
-        } catch (Exception error) { MessageBox.Show(error.Message, "极简 MD"); }
+        } catch (Exception error) { MessageBox.Show(error.Message, "AI Clipboard"); }
     }
 }
 

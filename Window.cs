@@ -1,6 +1,9 @@
 using System;
 using System.Drawing;
 using System.IO;
+using System.Reflection;
+using System.Threading;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
@@ -15,9 +18,58 @@ internal sealed class ClipWindow : Form
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 
+    [DllImport("user32.dll")] private static extern bool RegisterHotKey(IntPtr hwnd, int id, uint mods, uint key);
+    [DllImport("user32.dll")] private static extern bool UnregisterHotKey(IntPtr hwnd, int id);
+    [DllImport("user32.dll")] private static extern bool SetForegroundWindow(IntPtr hwnd);
+    private const int ShortcutId = 1;
+    private readonly NotifyIcon tray = new NotifyIcon();
+    private bool registered, quitting;
+    private string shortcut;
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern int SetCurrentProcessExplicitAppUserModelID(string id);
+    private static readonly bool Chinese = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "zh";
+
+    private void Reveal()
+    {
+        Show();
+        WindowState = FormWindowState.Normal;
+        SetForegroundWindow(Handle);
+        Activate();
+        view.Focus();
+    }
+
+    private void Quit() { quitting = true; Close(); }
+
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+        if (!quitting && e.CloseReason == CloseReason.UserClosing) {
+            e.Cancel = true;
+            Hide();
+        }
+        base.OnFormClosing(e);
+    }
+
+    protected override void OnHandleDestroyed(EventArgs args)
+    {
+        if (registered) { UnregisterHotKey(Handle, ShortcutId); registered = false; }
+        base.OnHandleDestroyed(args);
+    }
+
+    protected override void WndProc(ref Message message)
+    {
+        if (message.Msg == 0x0312 && message.WParam.ToInt32() == ShortcutId) { Reveal(); return; }
+        base.WndProc(ref message);
+    }
+
     protected override void OnHandleCreated(EventArgs args)
     {
         base.OnHandleCreated(args);
+        registered = RegisterHotKey(Handle, ShortcutId, 0x4003, 0x20);
+        shortcut = "Ctrl + Alt + Space";
+        if (!registered) {
+            registered = RegisterHotKey(Handle, ShortcutId, 0x4003, 0x4D);
+            shortcut = "Ctrl + Alt + M";
+        }
         int disabled = 1; // DWMNCRP_DISABLED
         int square = 1;   // DWMWCP_DONOTROUND
         int noColor = -2; // DWMWA_COLOR_NONE
@@ -28,7 +80,19 @@ internal sealed class ClipWindow : Form
 
     private ClipWindow()
     {
-        Text = "极简 MD";
+        Text = Chinese ? "AI 剪贴板" : "AI Clipboard";
+        var menu = new ContextMenuStrip();
+        menu.Items.Add(Chinese ? "打开 AI 剪贴板" : "Show AI Clipboard", null, (s,e) => Reveal());
+        menu.Items.Add(Chinese ? "退出" : "Quit", null, (s,e) => Quit());
+        tray.ContextMenuStrip = menu;
+        var iconStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("feather.ico");
+        Icon = new Icon(iconStream);
+        var smallIcon = new Icon(Icon, SystemInformation.SmallIconSize);
+        tray.Icon = smallIcon;
+        tray.Text = Text;
+        tray.MouseClick += (s,e) => { if (e.Button == MouseButtons.Left) Reveal(); };
+        tray.Visible = true;
+        FormClosed += (s,e) => { tray.Visible = false; tray.Dispose(); menu.Dispose(); smallIcon.Dispose(); iconStream.Dispose(); };
         FormBorderStyle = FormBorderStyle.None;
         StartPosition = FormStartPosition.CenterScreen;
         Size = new Size(680, 450);
@@ -55,7 +119,9 @@ internal sealed class ClipWindow : Form
                 core.WebMessageReceived += (s,e) => {
                     if (e.Source != page) return;
                     string action = e.TryGetWebMessageAsString();
-                    if (action == "close") Close();
+                    if (action == "quit") Quit();
+                    else if (action == "hide") Hide();
+                    else if (action == "hotkey-status") core.PostWebMessageAsString(registered ? shortcut : "shortcut-unavailable");
                     else if (action == "minimize") WindowState = FormWindowState.Minimized;
                     else if (action == "drag" || action == "resize") {
                         ReleaseCapture();
@@ -63,15 +129,28 @@ internal sealed class ClipWindow : Form
                     }
                 };
                 core.Navigate(page);
-            } catch (Exception ex) { MessageBox.Show("无法启动编辑器。请检查 Microsoft Edge WebView2 Runtime。\n" + ex.Message, Text); Close(); }
+            } catch (Exception ex) { MessageBox.Show((Chinese ? "请检查 Microsoft Edge WebView2 Runtime。" : "Check the Microsoft Edge WebView2 Runtime.") + "\n" + ex.Message, Text); Quit(); }
         };
     }
 
     [STAThread]
     private static void Main() {
+        SetCurrentProcessExplicitAppUserModelID("Sunshuren.AIClipboard");
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
-        Application.Run(new ClipWindow());
+        bool first;
+        using (var wake = new EventWaitHandle(false, EventResetMode.AutoReset, @"Local\Sunshuren.AIClipboard.Wake", out first)) {
+            if (!first) { wake.Set(); return; }
+            using (var window = new ClipWindow()) {
+                var handle = window.Handle;
+                var listener = ThreadPool.RegisterWaitForSingleObject(wake, (state,timedOut) => {
+                    try { window.BeginInvoke((Action)window.Reveal); }
+                    catch (InvalidOperationException) { }
+                }, null, Timeout.Infinite, false);
+                try { Application.Run(window); }
+                finally { listener.Unregister(null); }
+            }
+        }
     }
 }
 
