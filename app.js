@@ -94,12 +94,28 @@ if (desktop) {
   document.querySelector('header').addEventListener('pointerdown', e => {
     if (e.button === 0 && !e.target.closest('button')) desktop.postMessage('drag');
   });
-  document.querySelector('#resize').onpointerdown = e => {
-    if (e.button === 0) desktop.postMessage('resize');
-  };
+
 }
 
 const actions = document.querySelector('#actions');
+function showActions(x, y) {
+  actions.showPopover();
+  actions.style.left = Math.max(0, Math.min(x, innerWidth - actions.offsetWidth)) + 'px';
+  actions.style.top = Math.max(0, Math.min(y, innerHeight - actions.offsetHeight)) + 'px';
+}
+document.addEventListener('contextmenu', event => {
+  if (settings.open || event.target.closest('textarea, input, #actions')) return;
+  event.preventDefault();
+  showActions(event.clientX, event.clientY);
+});
+document.addEventListener('keydown', event => {
+  if (!settings.open && event.shiftKey && event.key === 'F10') {
+    event.preventDefault();
+    const rect = document.activeElement.getBoundingClientRect();
+    showActions(rect.left + 8, rect.top + 8);
+    actions.querySelector('button').focus();
+  }
+});
 document.querySelector('#history').addEventListener('click', () => actions.hidePopover());
 document.addEventListener('keydown', event => {
   if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.code === 'KeyC') {

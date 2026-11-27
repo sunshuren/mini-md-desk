@@ -16,19 +16,21 @@ Get [the latest release](https://github.com/sunshuren/mini-md-desk/releases/late
 | Action | How |
 | --- | --- |
 | Show and focus the running app from another app | **Ctrl + Alt + Space**, or click the tray icon |
-| Minimize to the taskbar | **··· → Minimize** |
-| Keep running in the system tray | **··· → Hide to tray**, or **Alt + F4** |
-| Quit and release the shortcut | **··· → Quit**, or right-click the tray icon and choose **Quit** |
+| Minimize to the taskbar | **Right-click → Minimize** |
+| Keep running in the system tray | **Right-click → Hide to tray**, or **Alt + F4** |
+| Quit and release the shortcut | **Right-click → Quit**, or right-click the tray icon and choose **Quit** |
 
-Switching to another app automatically hides the editor in the tray. Its own menus and dialogs keep it visible.
+Switching apps keeps the editor visible. Drag any edge or corner to resize. Right-click the reading area or press Shift+F10 to open clip actions.
 
 Launching the executable again brings the existing window forward. If Ctrl + Alt + Space is taken, the app tries **Ctrl + Alt + M** and displays the active shortcut in its menu. If both are taken, the menu displays a notice and the tray icon can still open the app.
 
 ## Editing
 
-Paste with Ctrl+V, or choose **··· → Paste new clip**. Use **Open** to import a UTF-8 Markdown file. Click a clip in **History** to return to it. Inside a paragraph or cell, paste inserts text at the cursor. Tab and Shift+Tab move between table cells.
+Pasted Markdown renders immediately, including when pasting inside the active editor. Click a rendered paragraph or table cell to edit it.
 
-Press **Ctrl+Shift+C** to copy the full Markdown and **Ctrl+S** to export it (use Cmd on macOS). On Windows, right-click the feather icon in the system tray and choose **Settings** (browser edition: **··· → Settings**) to change the warm cream background. The interface follows the browser's preferred language, with Chinese for Chinese locales and English otherwise.
+Paste with Ctrl+V, or choose **Right-click → Paste new clip**. Use **Open** to import a UTF-8 Markdown file. Click a clip in **History** to return to it. Inside a paragraph or cell, paste inserts text at the cursor. Tab and Shift+Tab move between table cells.
+
+Press **Ctrl+Shift+C** to copy the full Markdown and **Ctrl+S** to export it (use Cmd on macOS). On Windows, right-click the feather icon in the system tray and choose **Settings** (browser edition: **Right-click → Settings**) to change the warm cream background. The interface follows the browser's preferred language, with Chinese for Chinese locales and English otherwise.
 
 Windows releases from v1.1 onward share clip history and appearance settings. For v1.0, export your draft as Markdown first. If upgrading the standalone HTML edition, keeping its previous filename and location helps preserve browser storage.
 

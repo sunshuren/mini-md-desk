@@ -12,6 +12,7 @@ function applyBackground(color) {
   root.style.setProperty('--paper', color);
   root.dataset.ink = luminance < .18 ? 'light' : 'dark';
   colorPicker.value = color;
+  window.chrome?.webview?.postMessage('paper:' + color);
 }
 try { applyBackground(localStorage.getItem(themeKey) || cream); }
 catch { applyBackground(cream); }

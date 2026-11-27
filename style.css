@@ -9,7 +9,6 @@ button { border: 0; background: transparent; color: inherit; font-size: 13px; cu
 button:hover { background: var(--hover); }
 button:disabled { opacity: .4; }
 :focus-visible { outline: 1px dotted #888; outline-offset: 2px; }
-#more { position: absolute; right: 8px; top: 1px; padding: 0 8px; height: 25px; color: var(--muted); font-size: 19px; line-height: 1; }
 main { max-width: 760px; margin: 0 auto; padding: 5px clamp(16px,4vw,42px) 12vh; overflow-wrap: anywhere; }
 .block { margin: .7em 0; }
 .empty { color: var(--muted); }
@@ -23,15 +22,14 @@ tr:hover { background: var(--hover); }
 pre { white-space: pre-wrap; color: var(--muted); }
 code { font-size: .92em; }
 blockquote { color: var(--muted); margin-left: 1.2em; }
-#actions { position: fixed; inset: 28px 8px auto auto; margin: 0; padding: 12px; width: min(262px,92vw); max-height: 80vh; overflow: auto; border: 0; background: var(--menu); color: inherit; }
+#actions { position: fixed; inset: auto; margin: 0; padding: 12px; width: min(262px,92vw); max-height: 80vh; overflow: auto; border: 0; background: var(--menu); color: inherit; }
 #actions nav, .menu-heading, .window-controls { display: flex; flex-wrap: wrap; align-items: center; }
 .menu-heading { justify-content: space-between; padding-left: 8px; margin-top: 10px; font-size: 12px; color: var(--muted); }
 #history button { display: block; width: 100%; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #history [aria-current=true] { font-weight: 650; }
 #status { display: block; padding: 0 8px; color: var(--muted); font-size: 12px; }
-.window-controls, #resize { display: none; }
+.window-controls { display: none; }
 .desktop .window-controls { display: flex; margin-top: 8px; }
-.desktop #resize { display: block; position: fixed; bottom: 0; right: 0; width: 14px; height: 14px; cursor: nwse-resize; }
 
 
 #settings { background: var(--paper); color: var(--ink); border: 0; padding: 20px 24px; }
@@ -42,3 +40,4 @@ blockquote { color: var(--muted); margin-left: 1.2em; }
 #background { width: 26px; height: 24px; padding: 0; border: 0; background: transparent; cursor: pointer; }
 
 #hotkey { display: block; width: 100%; padding: 2px 8px; color: var(--muted); font-size: 12px; }
+

@@ -21,30 +21,6 @@ internal sealed class ClipWindow : Form
     [DllImport("user32.dll")] private static extern bool RegisterHotKey(IntPtr hwnd, int id, uint mods, uint key);
     [DllImport("user32.dll")] private static extern bool UnregisterHotKey(IntPtr hwnd, int id);
     [DllImport("user32.dll")] private static extern bool SetForegroundWindow(IntPtr hwnd);
-    [DllImport("user32.dll")] private static extern IntPtr GetForegroundWindow();
-    [DllImport("user32.dll")] private static extern IntPtr GetAncestor(IntPtr hwnd, uint flag);
-    [DllImport("user32.dll")] private static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint processId);
-    private readonly System.Windows.Forms.Timer focusCheck = new System.Windows.Forms.Timer { Interval = 150 };
-    private uint browserProcessId;
-
-    private void CheckForeground(object sender, EventArgs args)
-    {
-        if (quitting || !Visible || WindowState == FormWindowState.Minimized) {
-            focusCheck.Stop();
-            return;
-        }
-        IntPtr foreground = GetForegroundWindow();
-        if (foreground == IntPtr.Zero) return;
-        uint foregroundProcess, hostProcess;
-        GetWindowThreadProcessId(foreground, out foregroundProcess);
-        GetWindowThreadProcessId(Handle, out hostProcess);
-        // WebView2 popups and native file pickers may have their own top-level HWND.
-        if (GetAncestor(foreground, 3) == GetAncestor(Handle, 3) ||
-            foregroundProcess == hostProcess || foregroundProcess == browserProcessId) return;
-        focusCheck.Stop();
-        Hide();
-    }
-
     private const int ShortcutId = 1;
     private readonly NotifyIcon tray = new NotifyIcon();
     private bool registered, quitting;
@@ -88,8 +64,30 @@ internal sealed class ClipWindow : Form
         base.OnHandleDestroyed(args);
     }
 
+    protected override CreateParams CreateParams
+    {
+        get {
+            var style = base.CreateParams;
+            style.Style |= 0x00040000; // WS_THICKFRAME enables system resizing.
+            return style;
+        }
+    }
+
     protected override void WndProc(ref Message message)
     {
+        if (message.Msg == 0x0083) { message.Result = IntPtr.Zero; return; } // Use the entire window as the client area.
+        if (message.Msg == 0x0084 && WindowState == FormWindowState.Normal) {
+            int point = unchecked((int)message.LParam.ToInt64());
+            Point local = PointToClient(new Point((short)point, (short)(point >> 16)));
+            bool left = local.X < Padding.Left, right = local.X >= ClientSize.Width - Padding.Right;
+            bool top = local.Y < Padding.Top, bottom = local.Y >= ClientSize.Height - Padding.Bottom;
+            if (left || right || top || bottom) {
+                int hit = top ? (left ? 13 : right ? 14 : 12)
+                              : bottom ? (left ? 16 : right ? 17 : 15) : (left ? 10 : 11);
+                message.Result = (IntPtr)hit;
+                return;
+            }
+        }
         if (message.Msg == 0x0312 && message.WParam.ToInt32() == ShortcutId) { Reveal(); return; }
         base.WndProc(ref message);
     }
@@ -114,9 +112,6 @@ internal sealed class ClipWindow : Form
     private ClipWindow()
     {
         Text = Chinese ? "AI 剪贴板" : "AI Clipboard";
-        focusCheck.Tick += CheckForeground;
-        Activated += (s,e) => focusCheck.Start();
-        VisibleChanged += (s,e) => { if (!Visible) focusCheck.Stop(); };
         var menu = new ContextMenuStrip();
         menu.Items.Add(Chinese ? "打开 AI 剪贴板" : "Show AI Clipboard", null, (s,e) => Reveal());
         menu.Items.Add(Chinese ? "设置" : "Settings", null, (s,e) => ShowSettings());
@@ -129,7 +124,7 @@ internal sealed class ClipWindow : Form
         tray.Text = Text;
         tray.MouseClick += (s,e) => { if (e.Button == MouseButtons.Left) Reveal(); };
         tray.Visible = true;
-        FormClosed += (s,e) => { focusCheck.Dispose(); tray.Visible = false; tray.Dispose(); menu.Dispose(); smallIcon.Dispose(); iconStream.Dispose(); };
+        FormClosed += (s,e) => { tray.Visible = false; tray.Dispose(); menu.Dispose(); smallIcon.Dispose(); iconStream.Dispose(); };
         FormBorderStyle = FormBorderStyle.None;
         StartPosition = FormStartPosition.CenterScreen;
         Size = new Size(680, 450);
@@ -137,6 +132,7 @@ internal sealed class ClipWindow : Form
         AutoScaleMode = AutoScaleMode.Dpi;
         BackColor = Color.FromArgb(245, 242, 233);
         view.DefaultBackgroundColor = BackColor;
+        Padding = new Padding(6);
         view.Dock = DockStyle.Fill;
         Controls.Add(view);
         Shown += async (sender, args) => {
@@ -145,7 +141,6 @@ internal sealed class ClipWindow : Form
                 var env = await CoreWebView2Environment.CreateAsync(null, cache);
                 await view.EnsureCoreWebView2Async(env);
                 var core = view.CoreWebView2;
-                browserProcessId = core.BrowserProcessId;
                 const string page = "https://minimd.local/editor.html";
                 core.SetVirtualHostNameToFolderMapping("minimd.local", AppDomain.CurrentDomain.BaseDirectory, CoreWebView2HostResourceAccessKind.Deny);
                 core.NavigationStarting += (s,e) => { if (e.Uri != page) e.Cancel = true; };
@@ -168,9 +163,13 @@ internal sealed class ClipWindow : Form
                         }
                     }
                     else if (action == "minimize") WindowState = FormWindowState.Minimized;
-                    else if (action == "drag" || action == "resize") {
+                    else if (action == "drag") {
                         ReleaseCapture();
-                        SendMessage(Handle, 0xA1, (IntPtr)(action == "drag" ? 2 : 17), IntPtr.Zero);
+                        SendMessage(Handle, 0xA1, (IntPtr)2, IntPtr.Zero);
+                    } else if (action.StartsWith("paper:#") && action.Length == 13) {
+                        int rgb;
+                        if (int.TryParse(action.Substring(7), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out rgb))
+                            BackColor = Color.FromArgb(255, Color.FromArgb(rgb));
                     }
                 };
                 core.Navigate(page);

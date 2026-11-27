@@ -78,7 +78,7 @@ function begin(item) {
   item.el.replaceChildren(input);
   active = item;
   function resize() { input.style.height = 'auto'; input.style.height = (input.scrollHeight + 2) + 'px'; }
-  input.addEventListener('input', () => {
+  input.addEventListener('input', event => {
     let value = input.value.replace(/\n/g, newline);
     if (item.kind === 'cell') value = value.replace(/\r?\n/g, ' ').replace(/(\\*)\|/g, (match, slashes) => slashes.length % 2 ? match : '\\' + match);
     const delta = value.length - (item.end - item.start);
@@ -87,6 +87,11 @@ function begin(item) {
     for (const next of fields.slice(fields.indexOf(item) + 1)) { next.start += delta; next.end += delta; }
     resize();
     remember();
+    if (event.inputType === 'insertFromPaste' && !event.isComposing) {
+      // Reparse the whole clip: one pasted block can become an editable table
+      // or several independent headings, lists, and code blocks.
+      draw();
+    }
   });
   input.addEventListener('blur', () => {
     if (active !== item) return;
