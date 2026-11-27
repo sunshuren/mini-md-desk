@@ -9,7 +9,7 @@ dist.mkdir(exist_ok=True)
 html = (root / 'index.html').read_text('utf-8')
 css = (root / 'style.css').read_text('utf-8')
 html = html.replace('<link rel="stylesheet" href="style.css">', '<style>' + css + '</style>')
-for name in ['vendor/markdown-it.min.js', 'editor.js', 'history.js', 'app.js']:
+for name in ['vendor/markdown-it.min.js', 'editor.js', 'history.js', 'appearance.js', 'app.js']:
     script = (root / name).read_text('utf-8-sig')
     html = html.replace(f'<script src="{name}"></script>', '<script>' + script.replace('</script', '<\\/script') + '</script>')
 licenses = [root / 'LICENSE', *sorted((root / 'vendor').glob('*-LICENSE.txt'))]
@@ -37,7 +37,7 @@ if os.name == 'nt':
         for path in ['lib/net462/Microsoft.Web.WebView2.Core.dll', 'lib/net462/Microsoft.Web.WebView2.WinForms.dll',
                      'runtimes/win-x64/native/WebView2Loader.dll', 'LICENSE.txt']:
             (dist / Path(path).name).write_bytes(archive.read(path))
-    common = [str(compiler), '/nologo', '/target:winexe', '/platform:x64', '/codepage:65001', '/reference:System.Windows.Forms.dll']
+    common = [str(compiler), '/nologo', '/target:winexe', '/platform:x64', '/win32manifest:' + str(root / 'desktop.manifest'), '/codepage:65001', '/reference:System.Windows.Forms.dll']
     managed = ['Microsoft.Web.WebView2.Core.dll', 'Microsoft.Web.WebView2.WinForms.dll']
     subprocess.run(common + ['/reference:System.Drawing.dll', *['/reference:' + name for name in managed],
                              '/out:ClipWindow.exe', str(root / 'Window.cs')], cwd=dist, check=True)

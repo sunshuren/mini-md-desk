@@ -22,7 +22,7 @@ document.querySelector('#paste').onclick = async () => {
     const text = await navigator.clipboard.readText();
     if (text) replaceDocument(text, '未命名草稿', true);
     else status.textContent = '剪贴板中没有文字';
-  } catch { status.textContent = '点击左侧记录区，再按 Ctrl+V 新建条目'; }
+  } catch { status.textContent = '点击正文外的空白处，按 Ctrl+V 新建条目'; }
 };
 document.addEventListener('paste', event => {
   if (event.target.tagName === 'TEXTAREA') return;
@@ -85,3 +85,12 @@ if (desktop) {
     if (e.button === 0) desktop.postMessage('resize');
   };
 }
+
+const actions = document.querySelector('#actions');
+document.querySelector('#history').addEventListener('click', () => actions.hidePopover());
+document.addEventListener('keydown', event => {
+  if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.code === 'KeyC') {
+    event.preventDefault();
+    document.querySelector('#copy').click();
+  }
+});

@@ -12,14 +12,30 @@ internal sealed class ClipWindow : Form
     [DllImport("user32.dll")] private static extern IntPtr SendMessage(IntPtr hwnd, int msg, IntPtr w, IntPtr l);
     private readonly WebView2 view = new WebView2();
 
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+
+    protected override void OnHandleCreated(EventArgs args)
+    {
+        base.OnHandleCreated(args);
+        int disabled = 1; // DWMNCRP_DISABLED
+        int square = 1;   // DWMWCP_DONOTROUND
+        int noColor = -2; // DWMWA_COLOR_NONE
+        DwmSetWindowAttribute(Handle, 2, ref disabled, sizeof(int));
+        DwmSetWindowAttribute(Handle, 33, ref square, sizeof(int));
+        DwmSetWindowAttribute(Handle, 34, ref noColor, sizeof(int));
+    }
+
     private ClipWindow()
     {
         Text = "极简 MD";
         FormBorderStyle = FormBorderStyle.None;
         StartPosition = FormStartPosition.CenterScreen;
-        Size = new Size(880, 600);
-        MinimumSize = new Size(520, 340);
-        BackColor = Color.FromArgb(250, 250, 246);
+        Size = new Size(680, 450);
+        MinimumSize = new Size(280, 150);
+        AutoScaleMode = AutoScaleMode.Dpi;
+        BackColor = Color.FromArgb(245, 242, 233);
+        view.DefaultBackgroundColor = BackColor;
         view.Dock = DockStyle.Fill;
         Controls.Add(view);
         Shown += async (sender, args) => {

@@ -2,9 +2,12 @@
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
 <title>极简 MD</title><link rel="stylesheet" href="style.css"></head>
-<body><header><div class="brand"><b aria-hidden="true">M↓</b> 极简 MD</div><nav aria-label="文稿操作">
-<button id="paste">粘贴新条目</button><button id="open">打开</button><button id="copy">复制全文</button><button id="save">保存 .md</button></nav><div class="window-controls"><button id="minimize" aria-label="最小化">−</button><button id="close" aria-label="关闭">×</button></div></header>
-<div class="workspace"><aside aria-label="剪贴记录"><div class="meta"><strong>剪贴记录</strong><button id="delete" aria-label="删除当前条目">删除</button></div><div id="history"></div></aside>
-<section><div class="meta"><span id="filename">未命名草稿</span><span id="status" role="status"></span></div>
-<main aria-label="文稿"></main></section></div><div id="resize" aria-hidden="true"></div><input type="file" accept=".md,.markdown,.txt,text/plain" hidden>
-<script src="vendor/markdown-it.min.js"></script><script src="editor.js"></script><script src="history.js"></script><script src="app.js"></script></body></html>
+<body><header><button id="more" popovertarget="actions" aria-label="历史和操作" title="历史和操作">···</button></header>
+<div id="actions" popover>
+<nav aria-label="文稿操作"><button id="paste">粘贴新条目</button><button id="open">打开</button><button id="copy">复制全文</button><button id="save">保存 .md</button></nav>
+<div class="menu-heading"><span>剪贴记录</span><button id="delete">删除当前条目</button></div><div id="history"></div>
+<details id="appearance"><summary>外观设置</summary><div class="color-row"><label for="background">背景色</label><input id="background" type="color" value="#f5f2e9"><button id="reset-color">恢复米黄</button></div></details>
+<div class="window-controls"><button id="minimize">最小化</button><button id="close">关闭</button></div><span id="status" role="status"></span></div>
+<span id="filename" hidden></span><main aria-label="文稿"></main><div id="resize" aria-hidden="true"></div>
+<input type="file" accept=".md,.markdown,.txt,text/plain" hidden>
+<script src="vendor/markdown-it.min.js"></script><script src="editor.js"></script><script src="history.js"></script><script src="appearance.js"></script><script src="app.js"></script></body></html>
