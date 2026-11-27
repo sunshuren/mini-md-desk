@@ -2,6 +2,8 @@
 :root[data-ink="light"] { --ink: white; --muted: #eee; --menu: color-mix(in srgb, var(--paper) 86%, black); --hover: color-mix(in srgb, var(--paper) 90%, white); }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--paper); color: var(--ink); }
+html, textarea, #actions { scrollbar-width: none; }
+html::-webkit-scrollbar, textarea::-webkit-scrollbar, #actions::-webkit-scrollbar { display: none; }
 body, button, textarea { font: 16px/1.7 "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif; }
 header { height: 26px; position: sticky; top: 0; z-index: 1; background: var(--paper); }
 .desktop header { cursor: move; }
